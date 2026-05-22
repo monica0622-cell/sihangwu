@@ -110,6 +110,18 @@ function publicUser(user) {
   };
 }
 
+function anonymousUser(deviceId = "") {
+  return {
+    id: "",
+    email: "",
+    name: "",
+    isRegistered: false,
+    deviceId,
+    createdAt: "",
+    updatedAt: ""
+  };
+}
+
 function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
@@ -229,16 +241,19 @@ async function handleApi(request, response, url) {
   if (request.method === "GET" && url.pathname === "/api/bootstrap") {
     const authUser = getSessionUser(db, request);
     const deviceId = url.searchParams.get("deviceId") || crypto.randomUUID();
-    const user = authUser || upsertUser(db, deviceId);
+    if (!authUser) {
+      return send(response, 200, { user: anonymousUser(deviceId), standardBrands, categories, garments: [], outfits: [], customBrands: [] });
+    }
     await writeDb(db);
-    return send(response, 200, { user: publicUser(user), standardBrands, categories, ...getUserWardrobe(db, user.id) });
+    return send(response, 200, { user: publicUser(authUser), standardBrands, categories, ...getUserWardrobe(db, authUser.id) });
   }
 
   if (request.method === "PUT" && url.pathname.match(/^\/api\/users\/[^/]+\/wardrobe$/)) {
     const userId = decodeURIComponent(url.pathname.split("/")[3]);
-    if (!db.users.some((user) => user.id === userId)) return send(response, 404, { error: "User not found" });
     const authUser = getSessionUser(db, request);
-    if (authUser && authUser.id !== userId) return send(response, 403, { error: "Forbidden" });
+    if (!authUser) return send(response, 401, { error: "请先注册或登录" });
+    if (authUser.id !== userId) return send(response, 403, { error: "Forbidden" });
+    if (!db.users.some((user) => user.id === userId)) return send(response, 404, { error: "User not found" });
     const body = await readBody(request);
     const stamp = new Date().toISOString();
     db.garments = db.garments.filter((item) => item.userId !== userId).concat((body.garments || []).map((item) => ({ ...item, userId })));
@@ -253,6 +268,8 @@ async function handleApi(request, response, url) {
   }
 
   if (request.method === "POST" && url.pathname === "/api/upload") {
+    const authUser = getSessionUser(db, request);
+    if (!authUser) return send(response, 401, { error: "请先注册或登录" });
     const body = await readBody(request, uploadLimitBytes);
     const match = String(body.dataUrl || "").match(/^data:([^;]+);base64,(.+)$/);
     if (!match) return send(response, 400, { error: "Invalid image data" });

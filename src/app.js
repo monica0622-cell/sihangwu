@@ -240,6 +240,7 @@ async function submitAuth(form) {
       (localBeforeRegister.garments.length || localBeforeRegister.outfits.length || localBeforeRegister.customBrands.length);
     state.authError = "";
     applyRemotePayload(data);
+    state.view = "capture";
     if (shouldMigrateLocal) {
       state.garments = localBeforeRegister.garments;
       state.outfits = localBeforeRegister.outfits;
@@ -279,6 +280,8 @@ async function logout() {
 }
 
 function render() {
+  const isRegistered = Boolean(state.currentUser?.isRegistered);
+  if (!isRegistered) state.view = "account";
   const brandList = allBrands();
   const visible = sortGarments(filterGarments(state.garments, state.filters, brandList), state.sortBy, brandList);
   app.innerHTML = `
@@ -288,19 +291,21 @@ function render() {
         <h1>衣橱相机</h1>
       </div>
       <nav class="view-tabs" aria-label="主导航">
-        ${tabButton("capture", "拍照")}
-        ${tabButton("closet", "衣橱")}
-        ${tabButton("outfits", "穿搭")}
-        ${tabButton("care", "保养")}
-        ${tabButton("categories", "品类")}
-        ${tabButton("registry", "品牌库")}
-        ${tabButton("data", "数据")}
-        ${tabButton("account", state.currentUser?.isRegistered ? "账号" : "注册")}
+        ${isRegistered ? `
+          ${tabButton("capture", "拍照")}
+          ${tabButton("closet", "衣橱")}
+          ${tabButton("outfits", "穿搭")}
+          ${tabButton("care", "保养")}
+          ${tabButton("categories", "品类")}
+          ${tabButton("registry", "品牌库")}
+          ${tabButton("data", "数据")}
+          ${tabButton("account", "账号")}
+        ` : tabButton("account", "注册")}
       </nav>
     </header>
 
     ${state.view === "capture" ? renderCaptureApp() : renderAppView(visible)}
-    ${renderBottomNav()}
+    ${isRegistered ? renderBottomNav() : ""}
     ${renderDetailDrawer()}
     ${state.toast ? `<div class="toast">${escapeHtml(state.toast)}</div>` : ""}
   `;
