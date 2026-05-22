@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>衣橱相机后台</title>
+    <style>
+      :root {
+        --ink: #181716;
+        --muted: #716b63;
+        --line: #ddd6cb;
+        --paper: #f5efe8;
+        --surface: #fff;
+        --accent: #7d1f2a;
+        font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink); }
+      main { max-width: 1180px; margin: 0 auto; padding: 30px 18px 54px; }
+      header { display: flex; justify-content: space-between; gap: 16px; align-items: end; margin-bottom: 22px; }
+      h1, h2, p { margin-top: 0; }
+      h1 { margin-bottom: 0; font-size: clamp(32px, 5vw, 56px); line-height: 1; }
+      .eyebrow { margin-bottom: 8px; color: var(--accent); font-size: 12px; text-transform: uppercase; }
+      button, a { min-height: 40px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); padding: 0 14px; text-decoration: none; display: inline-grid; place-items: center; }
+      .kpis { display: grid; grid-template-columns: repeat(5, minmax(130px, 1fr)); gap: 12px; margin-bottom: 18px; }
+      .card, .panel { border: 1px solid var(--line); border-radius: 8px; background: rgb(255 255 255 / 84%); box-shadow: 0 14px 34px rgb(24 23 22 / 6%); }
+      .card { padding: 18px; }
+      .card span { display: block; margin-bottom: 8px; color: var(--muted); font-size: 13px; }
+      .card strong { font-size: 30px; font-weight: 600; }
+      .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+      .panel { padding: 18px; }
+      .panel h2 { margin-bottom: 14px; font-size: 22px; }
+      .row { display: grid; grid-template-columns: minmax(0, 1fr) 42px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+      .row:last-child { border-bottom: 0; }
+      .bar { height: 8px; border-radius: 999px; background: #eee6dc; overflow: hidden; margin-top: 7px; }
+      .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #c89b51); }
+      small { color: var(--muted); }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 10px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+      th { color: var(--muted); font-size: 12px; font-weight: 500; }
+      @media (max-width: 760px) {
+        header, .grid { grid-template-columns: 1fr; display: grid; align-items: start; }
+        .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">Admin Dashboard</p>
+          <h1>衣橱相机后台</h1>
+        </div>
+        <a href="/">返回 App</a>
+      </header>
+      <section class="kpis" id="kpis"></section>
+      <section class="grid">
+        <div class="panel">
+          <h2>品牌统计</h2>
+          <div id="brandStats"></div>
+        </div>
+        <div class="panel">
+          <h2>品类统计</h2>
+          <div id="categoryStats"></div>
+        </div>
+      </section>
+      <section class="panel" style="margin-top:14px">
+        <h2>最近用户</h2>
+        <table>
+          <thead><tr><th>用户 ID</th><th>账号 / 设备</th><th>更新时间</th></tr></thead>
+          <tbody id="recentUsers"></tbody>
+        </table>
+      </section>
+    </main>
+    <script>
+      const fmt = new Intl.NumberFormat("zh-CN");
+      const statLabel = {
+        users: "用户数",
+        registeredUsers: "注册用户",
+        garments: "衣物数",
+        outfits: "穿搭数",
+        customBrands: "自定义品牌",
+        uploads: "图片上传",
+        sessions: "登录会话"
+      };
+      function rows(items) {
+        const max = Math.max(...items.map(([, value]) => value), 1);
+        return items.length ? items.slice(0, 12).map(([label, value]) => `
+          <div class="row">
+            <div><strong>${label}</strong><div class="bar"><i style="width:${Math.max(8, Math.round(value / max * 100))}%"></i></div></div>
+            <b>${value}</b>
+          </div>
+        `).join("") : "<small>暂无数据</small>";
+      }
+      function adminRequestOptions() {
+        const current = new URL(window.location.href);
+        const headers = {};
+        if (current.username || current.password) {
+          headers.Authorization = `Basic ${btoa(`${current.username}:${current.password}`)}`;
+        }
+        return { credentials: "same-origin", headers };
+      }
+      async function load() {
+        const data = await fetch(`${window.location.origin}/api/admin/stats`, adminRequestOptions()).then((res) => {
+          if (!res.ok) throw new Error("后台需要登录或密码不正确");
+          return res.json();
+        });
+        document.querySelector("#kpis").innerHTML = Object.entries(data.totals).map(([key, value]) => `
+          <article class="card"><span>${statLabel[key] || key}</span><strong>${fmt.format(value)}</strong></article>
+        `).join("");
+        document.querySelector("#brandStats").innerHTML = rows(data.brandStats);
+        document.querySelector("#categoryStats").innerHTML = rows(data.categoryStats);
+        document.querySelector("#recentUsers").innerHTML = data.recentUsers.map((user) => `
+          <tr><td>${user.id.slice(0, 8)}</td><td>${(user.email || user.deviceId || "游客").slice(0, 24)}</td><td>${new Date(user.updatedAt).toLocaleString("zh-CN")}</td></tr>
+        `).join("");
+      }
+      load().catch((error) => {
+        document.querySelector("#kpis").innerHTML = `<article class="card"><span>后台状态</span><strong>需要登录</strong></article>`;
+        document.querySelector("#brandStats").innerHTML = `<small>${error.message}</small>`;
+        document.querySelector("#categoryStats").innerHTML = "<small>请输入后台账号密码后刷新。</small>";
+      });
+    </script>
+  </body>
+</html>

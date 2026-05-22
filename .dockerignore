@@ -1,0 +1,9 @@
+.DS_Store
+.env
+.git
+.tools
+data/db.json
+uploads/*
+!uploads/.gitkeep
+smart-wardrobe-*.png
+*.log

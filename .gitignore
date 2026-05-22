@@ -1,0 +1,12 @@
+.tools/
+.DS_Store
+npm
+npx
+data/db.json
+uploads/*
+!uploads/.gitkeep
+.env
+*.log
+smart-wardrobe-*.png
+manual-*.png
+auth-ui-test.png
