@@ -75,7 +75,7 @@ const state = {
   userId: "",
   currentUser: null,
   authToken: localStorage.getItem(authTokenStorageKey) || "",
-  authMode: "login",
+  authMode: "register",
   authError: "",
   remoteReady: false,
   editingId: null,
@@ -295,7 +295,7 @@ function render() {
         ${tabButton("categories", "品类")}
         ${tabButton("registry", "品牌库")}
         ${tabButton("data", "数据")}
-        ${tabButton("account", state.currentUser?.isRegistered ? "账号" : "登录")}
+        ${tabButton("account", state.currentUser?.isRegistered ? "账号" : "注册")}
       </nav>
     </header>
 
@@ -1177,9 +1177,9 @@ function renderDataTools() {
       <section class="utility-panel">
         <div>
           <h2>账号状态</h2>
-          <p>${state.currentUser?.isRegistered ? `已登录：${escapeHtml(state.currentUser.email)}` : "当前是游客模式。注册或登录后，可以跨设备同步衣橱数据。"}</p>
+          <p>${state.currentUser?.isRegistered ? `已登录：${escapeHtml(state.currentUser.email)}` : "当前是游客模式。请先注册账号，之后就可以在其他设备登录同步衣橱。"}</p>
         </div>
-        <button class="primary-button" data-view="account">${state.currentUser?.isRegistered ? "管理账号" : "注册 / 登录"}</button>
+        <button class="primary-button" data-view="account">${state.currentUser?.isRegistered ? "管理账号" : "注册账号"}</button>
       </section>
       <section class="utility-panel">
         <div>
@@ -1215,7 +1215,7 @@ function renderAccount() {
         <div>
           <p class="eyebrow">Account Sync</p>
           <h2>${isRegistered ? "你的衣橱已绑定账号。" : "注册账号后，衣橱就可以跨设备同步。"}</h2>
-          <p>${isRegistered ? "你可以在其他设备登录同一邮箱，继续管理同一套衣橱数据。" : "试玩版也可以直接用；正式开放给别人时，建议让用户用邮箱注册。"}</p>
+          <p>${isRegistered ? "你可以在其他设备登录同一邮箱，继续管理同一套衣橱数据。" : "第一次使用请先注册账号；已有账号的用户再切换到登录。"}</p>
         </div>
         <img src="${illustrations.data}" alt="账号同步插画" />
       </section>
@@ -1240,9 +1240,10 @@ function renderAccount() {
           : `
             <section class="auth-card">
               <div class="auth-tabs">
-                <button class="${state.authMode === "login" ? "active" : ""}" data-auth-mode="login">登录</button>
                 <button class="${state.authMode === "register" ? "active" : ""}" data-auth-mode="register">注册</button>
+                <button class="${state.authMode === "login" ? "active" : ""}" data-auth-mode="login">已有账号登录</button>
               </div>
+              <p class="auth-hint">${state.authMode === "register" ? "新用户先创建账号，衣橱数据会绑定到这个邮箱。" : "只有已经注册过的邮箱才能登录。"}</p>
               ${state.authError ? `<p class="form-error">${escapeHtml(state.authError)}</p>` : ""}
               <form class="auth-form">
                 ${state.authMode === "register" ? `
