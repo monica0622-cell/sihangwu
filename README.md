@@ -65,6 +65,8 @@ npm test
 
 - Android 原生壳工程：`android/`
 - Android APK 自动构建：`.github/workflows/android-apk.yml`
+- Android APK 固定下载地址：`https://github.com/monica0622-cell/sihangwu/releases/download/android-debug/WingedWardrobe-debug.apk`
+- Android 下载二维码：`android-app-qr.png`
 - iOS TestFlight / App Store 工程骨架：`ios/WingedWardrobe/`
 - 上架素材：`store-assets/`
 

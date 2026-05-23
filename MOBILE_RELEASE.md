@@ -17,6 +17,12 @@ The GitHub Actions workflow `.github/workflows/android-apk.yml` builds a debug A
 
 `winged-wardrobe-android-debug-apk`
 
+It also publishes the latest debug APK to this fixed Release download URL:
+
+`https://github.com/monica0622-cell/sihangwu/releases/download/android-debug/WingedWardrobe-debug.apk`
+
+Use `android-app-qr.png` for Android testers. It points to the APK download URL.
+
 For public distribution later, create a signed release APK/AAB and replace the IP URL with HTTPS on a domain.
 
 ## iOS TestFlight / App Store

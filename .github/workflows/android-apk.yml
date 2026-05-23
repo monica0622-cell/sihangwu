@@ -10,7 +10,7 @@ on:
       - ".github/workflows/android-apk.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-debug-apk:
@@ -48,3 +48,20 @@ jobs:
           name: winged-wardrobe-android-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      - name: Prepare release APK
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/WingedWardrobe-debug.apk
+
+      - name: Publish debug APK release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view android-debug >/dev/null 2>&1; then
+            gh release upload android-debug release/WingedWardrobe-debug.apk --clobber
+          else
+            gh release create android-debug release/WingedWardrobe-debug.apk \
+              --title "Winged Wardrobe Android Debug APK" \
+              --notes "Android debug install package for testing Winged Wardrobe. Download the APK on an Android phone and allow installation from browser/files when prompted."
+          fi
