@@ -43,6 +43,8 @@ const customBrandStorageKey = "smart-wardrobe.customBrands";
 const deviceStorageKey = "smart-wardrobe.deviceId";
 const authTokenStorageKey = "smart-wardrobe.authToken";
 const app = document.querySelector("#app");
+const androidApkUrl = "https://github.com/monica0622-cell/sihangwu/releases/download/android-debug/WingedWardrobe-debug.apk";
+const webAppUrl = "http://106.53.188.85/";
 const illustrations = {
   wardrobe: "./assets/illustrations/wardrobe-vignette.png",
   brands: "./assets/illustrations/brand-index.png",
@@ -282,7 +284,7 @@ async function logout() {
 
 function render() {
   const isRegistered = Boolean(state.currentUser?.isRegistered);
-  if (!isRegistered) state.view = "account";
+  if (!isRegistered && state.view !== "download") state.view = "account";
   const brandList = allBrands();
   const visible = sortGarments(filterGarments(state.garments, state.filters, brandList), state.sortBy, brandList);
   app.innerHTML = `
@@ -300,8 +302,9 @@ function render() {
           ${tabButton("categories", "品类")}
           ${tabButton("registry", "品牌库")}
           ${tabButton("data", "数据")}
+          ${tabButton("download", "下载")}
           ${tabButton("account", "账号")}
-        ` : tabButton("account", "注册")}
+        ` : `${tabButton("account", "注册")}${tabButton("download", "下载")}`}
       </nav>
     </header>
 
@@ -573,6 +576,7 @@ function renderActiveView(visible) {
   if (state.view === "registry") return renderBrandRegistry();
   if (state.view === "data") return renderDataTools();
   if (state.view === "account") return renderAccount();
+  if (state.view === "download") return renderDownload();
   if (state.view === "add") return renderForm();
   return renderCloset(visible);
 }
@@ -735,6 +739,47 @@ function getCaptureMissingFields(form, brandList) {
   if (!form.categoryLevel2 || !getSubcategory(form.categoryLevel1, form.categoryLevel2)) missing.push("二级品类");
   if (!form.colors?.length) missing.push("颜色");
   return missing;
+}
+
+function renderDownload() {
+  return `
+    <main class="download-page">
+      <section class="download-hero">
+        <div>
+          <p class="eyebrow">App Download</p>
+          <h2>把衣橱相机装到手机上，拍照后直接整理入库。</h2>
+          <p>安卓可以下载 APK 安装；iPhone 先用网页 App 添加到主屏幕，正式 TestFlight / App Store 版本会继续走苹果账号发布流程。</p>
+          <div class="hero-actions">
+            <a class="primary-button link-button" href="${androidApkUrl}">下载 Android APK</a>
+            <a class="ghost-button link-button" href="${webAppUrl}">打开网页版</a>
+          </div>
+        </div>
+        <img src="${illustrations.wardrobe}" alt="衣橱相机 App 封面" />
+      </section>
+
+      <section class="download-grid">
+        <article class="download-card">
+          <div>
+            <p class="eyebrow">Android</p>
+            <h3>扫码下载 APK</h3>
+            <p>用安卓手机扫码，下载后选择允许浏览器或文件管理器安装。</p>
+          </div>
+          <img class="qr-image" src="./android-app-qr.png" alt="Android APK 下载二维码" />
+          <a class="primary-button link-button" href="${androidApkUrl}">直接下载</a>
+        </article>
+
+        <article class="download-card">
+          <div>
+            <p class="eyebrow">iPhone</p>
+            <h3>先添加网页 App</h3>
+            <p>用 Safari 打开后，点分享按钮，选择“添加到主屏幕”。</p>
+          </div>
+          <img class="qr-image" src="./iphone-app-qr.png" alt="iPhone 网页 App 二维码" />
+          <a class="ghost-button link-button" href="${webAppUrl}">打开网页 App</a>
+        </article>
+      </section>
+    </main>
+  `;
 }
 
 function renderCloset(garments) {

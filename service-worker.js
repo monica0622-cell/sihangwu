@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-wardrobe-app-v6";
+const CACHE_NAME = "smart-wardrobe-app-v7";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -13,7 +13,9 @@ const APP_ASSETS = [
   "./assets/illustrations/wardrobe-vignette.png",
   "./assets/illustrations/brand-index.png",
   "./assets/illustrations/category-board.png",
-  "./assets/illustrations/data-archive.png"
+  "./assets/illustrations/data-archive.png",
+  "./android-app-qr.png",
+  "./iphone-app-qr.png"
 ];
 
 self.addEventListener("install", (event) => {

@@ -1800,6 +1800,91 @@ h1 {
   margin: 0;
 }
 
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.download-page {
+  display: grid;
+  gap: 18px;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.download-hero,
+.download-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 84%);
+  box-shadow: 0 16px 36px rgb(24 23 22 / 7%);
+}
+
+.download-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 210px;
+  gap: 24px;
+  align-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 82% 18%, rgb(125 31 42 / 11%), transparent 34%),
+    linear-gradient(135deg, #fffefd, #f5efe6);
+}
+
+.download-hero h2 {
+  max-width: 760px;
+  margin-bottom: 12px;
+  font-size: clamp(30px, 5vw, 54px);
+  line-height: 1.05;
+  font-weight: 600;
+}
+
+.download-hero p {
+  max-width: 650px;
+  color: var(--muted);
+}
+
+.download-hero img {
+  width: 100%;
+  max-height: 250px;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 26px rgb(24 23 22 / 12%));
+}
+
+.download-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.download-card {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.download-card h3 {
+  margin: 0 0 8px;
+  font-size: 25px;
+}
+
+.download-card p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.qr-image {
+  width: min(100%, 280px);
+  aspect-ratio: 1;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  padding: 10px;
+  justify-self: center;
+}
+
 .stats-band,
 .filters,
 .insights-grid,
@@ -1829,11 +1914,14 @@ h1 {
 }
 
 @media (max-width: 680px) {
-  .account-hero {
+  .account-hero,
+  .download-hero,
+  .download-grid {
     grid-template-columns: 1fr;
   }
 
-  .account-hero img {
+  .account-hero img,
+  .download-hero img {
     max-width: 180px;
   }
 }
