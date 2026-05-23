@@ -1640,9 +1640,30 @@ h1 {
   backdrop-filter: blur(16px);
 }
 
+.capture-submit > div {
+  display: grid;
+  gap: 6px;
+}
+
 .capture-submit .primary-button,
 .capture-submit .ghost-button {
   min-height: 46px;
+}
+
+.capture-submit .primary-button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.capture-help {
+  margin: 0;
+  color: #8e2f21;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.capture-help.ready {
+  color: #3d6f54;
 }
 
 .inbox-item {

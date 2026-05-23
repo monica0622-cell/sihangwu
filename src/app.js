@@ -87,6 +87,7 @@ const state = {
   careError: "",
   brandError: "",
   formError: "",
+  isUploadingImage: false,
   toast: ""
 };
 
@@ -585,6 +586,7 @@ function renderCaptureApp() {
   const selectedCategory = getCategory(form.categoryLevel1);
   const selectedSubcategory = getSubcategory(form.categoryLevel1, form.categoryLevel2);
   const matchedBrand = normalizeBrand(form.brandSearch || brandList.find((brand) => brand.id === form.brandId)?.nameEn || "", brandList);
+  const missingFields = getCaptureMissingFields(form, brandList);
 
   return `
     <main class="capture-app">
@@ -610,12 +612,12 @@ function renderCaptureApp() {
             ${
               hasPhoto
                 ? `<img src="${escapeHtml(form.imageUrl)}" alt="衣物照片预览" />`
-                : `<div class="camera-empty"><span>◎</span><b>拍照上传衣物</b></div>`
+                : `<div class="camera-empty"><span>◎</span><b>${state.isUploadingImage ? "照片上传中" : "拍照上传衣物"}</b></div>`
             }
           </div>
           <label class="camera-button">
             <input name="imageFile" type="file" accept="image/*" capture="environment" />
-            <span>${hasPhoto ? "重新拍照 / 上传" : "拍照 / 上传照片"}</span>
+            <span>${state.isUploadingImage ? "正在处理照片..." : hasPhoto ? "重新拍照 / 上传" : "拍照 / 上传照片"}</span>
           </label>
         </section>
 
@@ -701,7 +703,10 @@ function renderCaptureApp() {
         </section>
 
         <div class="capture-submit">
-          <button class="primary-button" type="submit">确认入库</button>
+          <div>
+            <button class="primary-button" type="submit" ${state.isUploadingImage ? "disabled" : ""}>${state.isUploadingImage ? "照片处理中..." : "确认入库"}</button>
+            ${missingFields.length ? `<p class="capture-help">还差：${missingFields.map(escapeHtml).join("、")}</p>` : `<p class="capture-help ready">信息完整，可以入库。</p>`}
+          </div>
           <button class="ghost-button" type="button" data-action="clear-capture">清空</button>
         </div>
       </form>
@@ -719,6 +724,17 @@ function renderCaptureApp() {
       </section>
     </main>
   `;
+}
+
+function getCaptureMissingFields(form, brandList) {
+  const missing = [];
+  const matchedBrand = normalizeBrand(form.brandSearch || brandList.find((brand) => brand.id === form.brandId)?.nameEn || "", brandList);
+  if (!form.imageUrl) missing.push("照片");
+  if (!matchedBrand) missing.push("标准品牌");
+  if (!form.categoryLevel1 || !getCategory(form.categoryLevel1)) missing.push("一级品类");
+  if (!form.categoryLevel2 || !getSubcategory(form.categoryLevel1, form.categoryLevel2)) missing.push("二级品类");
+  if (!form.colors?.length) missing.push("颜色");
+  return missing;
 }
 
 function renderCloset(garments) {
@@ -1730,10 +1746,21 @@ function bindEvents() {
     if (event.target.name === "imageFile" && event.target.files?.[0]) {
       const reader = new FileReader();
       reader.addEventListener("load", async () => {
-        const draft = readForm(form);
-        draft.imageUrl = await uploadImage(reader.result);
-        draft.colors = Array.from(form.querySelectorAll("input[name='colors']:checked")).map((item) => item.value);
+        const pendingDraft = readForm(form);
+        pendingDraft.colors = Array.from(form.querySelectorAll("input[name='colors']:checked")).map((item) => item.value);
+        state.formDraft = pendingDraft;
+        state.isUploadingImage = true;
+        render();
+        const imageUrl = await uploadImage(reader.result);
+        const activeForm = document.querySelector(".garment-form");
+        const draft = activeForm ? readForm(activeForm) : state.formDraft || emptyForm();
+        draft.imageUrl = imageUrl;
+        draft.colors = activeForm
+          ? Array.from(activeForm.querySelectorAll("input[name='colors']:checked")).map((item) => item.value)
+          : draft.colors;
         state.formDraft = draft;
+        state.isUploadingImage = false;
+        state.formError = "";
         render();
       });
       reader.readAsDataURL(event.target.files[0]);
@@ -1741,6 +1768,11 @@ function bindEvents() {
   });
   form?.addEventListener("submit", (event) => {
     event.preventDefault();
+    if (state.isUploadingImage) {
+      state.formError = "照片还在处理中，请稍等几秒再确认入库";
+      render();
+      return;
+    }
     const values = readForm(form);
     const brandList = allBrands();
     const matchedBrand = normalizeBrand(values.brandSearch, brandList);
@@ -1750,6 +1782,12 @@ function bindEvents() {
       tags: splitList(values.tags),
       colors: Array.from(form.querySelectorAll("input[name='colors']:checked")).map((item) => item.value)
     };
+    const missingFields = getCaptureMissingFields({ ...values, colors: garmentInput.colors }, brandList);
+    if (state.view === "capture" && missingFields.length) {
+      state.formError = `请补充后再入库：${missingFields.join("、")}`;
+      render();
+      return;
+    }
     const errors = validateGarment(garmentInput, brandList);
     if (Object.keys(errors).length) {
       state.formError = Object.values(errors)[0];
