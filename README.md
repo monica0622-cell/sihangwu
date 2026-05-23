@@ -6,7 +6,7 @@
 
 - 拍照 / 上传衣物照片
 - 邮箱注册、登录、退出
-- 游客模式试玩
+- 新用户必须先注册，再进入拍照整理
 - 衣物按账号隔离和同步
 - 品牌库和手动新增品牌
 - 标准二级品类树
@@ -58,6 +58,15 @@ npm test
 ## 部署
 
 部署说明见 [DEPLOY.md](./DEPLOY.md)。
+
+## 移动端打包
+
+移动端说明见 [MOBILE_RELEASE.md](./MOBILE_RELEASE.md)。
+
+- Android 原生壳工程：`android/`
+- Android APK 自动构建：`.github/workflows/android-apk.yml`
+- iOS TestFlight / App Store 工程骨架：`ios/WingedWardrobe/`
+- 上架素材：`store-assets/`
 
 项目已经包含：
 

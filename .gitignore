@@ -10,3 +10,8 @@ uploads/*
 smart-wardrobe-*.png
 manual-*.png
 auth-ui-test.png
+android/.gradle/
+android/**/build/
+ios/**/DerivedData/
+ios/**/*.xcuserdata/
+ios/**/*.xcuserstate

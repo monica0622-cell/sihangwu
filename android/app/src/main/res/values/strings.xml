@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">衣橱相机</string>
+    <string name="photo_chooser_title">拍照或选择衣物照片</string>
+    <string name="photo_chooser_unavailable">没有可用的照片应用</string>
+</resources>
