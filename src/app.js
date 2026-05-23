@@ -1775,41 +1775,38 @@ function bindEvents() {
 
   const form = document.querySelector(".garment-form");
   form?.addEventListener("change", (event) => {
-    if (event.target.name === "categoryLevel1") {
-      const draft = readForm(form);
-      draft.categoryLevel2 = "";
-      draft.colors = Array.from(form.querySelectorAll("input[name='colors']:checked")).map((item) => item.value);
-      state.formDraft = draft;
-      render();
-    }
-    if (event.target.name === "brandSearch") {
-      const draft = readForm(form);
-      draft.colors = Array.from(form.querySelectorAll("input[name='colors']:checked")).map((item) => item.value);
-      state.formDraft = draft;
-      render();
-    }
     if (event.target.name === "imageFile" && event.target.files?.[0]) {
       const reader = new FileReader();
       reader.addEventListener("load", async () => {
-        const pendingDraft = readForm(form);
-        pendingDraft.colors = Array.from(form.querySelectorAll("input[name='colors']:checked")).map((item) => item.value);
+        const pendingDraft = readGarmentDraft(form);
         state.formDraft = pendingDraft;
         state.isUploadingImage = true;
         render();
         const imageUrl = await uploadImage(reader.result);
         const activeForm = document.querySelector(".garment-form");
-        const draft = activeForm ? readForm(activeForm) : state.formDraft || emptyForm();
+        const draft = activeForm ? readGarmentDraft(activeForm) : state.formDraft || emptyForm();
         draft.imageUrl = imageUrl;
-        draft.colors = activeForm
-          ? Array.from(activeForm.querySelectorAll("input[name='colors']:checked")).map((item) => item.value)
-          : draft.colors;
         state.formDraft = draft;
         state.isUploadingImage = false;
         state.formError = "";
         render();
       });
       reader.readAsDataURL(event.target.files[0]);
+      return;
     }
+
+    if (!event.target.name) return;
+    const draft = readGarmentDraft(form);
+    if (event.target.name === "categoryLevel1") {
+      draft.categoryLevel2 = "";
+    }
+    state.formDraft = draft;
+    state.formError = "";
+    render();
+  });
+  form?.addEventListener("input", (event) => {
+    if (!event.target.name || event.target.name === "imageFile") return;
+    state.formDraft = readGarmentDraft(form);
   });
   form?.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -1818,14 +1815,14 @@ function bindEvents() {
       render();
       return;
     }
-    const values = readForm(form);
+    const values = readGarmentDraft(form);
     const brandList = allBrands();
     const matchedBrand = normalizeBrand(values.brandSearch, brandList);
     const garmentInput = {
       ...values,
       brandId: matchedBrand?.id || "",
       tags: splitList(values.tags),
-      colors: Array.from(form.querySelectorAll("input[name='colors']:checked")).map((item) => item.value)
+      colors: values.colors
     };
     const missingFields = getCaptureMissingFields({ ...values, colors: garmentInput.colors }, brandList);
     if (state.view === "capture" && missingFields.length) {
@@ -1912,6 +1909,16 @@ function readForm(form) {
   const values = Object.fromEntries(data.entries());
   delete values.imageFile;
   return values;
+}
+
+function readGarmentDraft(form) {
+  const data = new FormData(form);
+  const values = Object.fromEntries(data.entries());
+  delete values.imageFile;
+  return {
+    ...values,
+    colors: data.getAll("colors").map(String)
+  };
 }
 
 function readOutfitForm(form) {
