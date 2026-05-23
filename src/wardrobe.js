@@ -1,5 +1,10 @@
 import { brands, categories } from "./data.js";
 
+export function createId() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export function normalizeText(value) {
   return String(value || "")
     .trim()
@@ -197,7 +202,7 @@ export function validateCareLog(input, garments) {
 
 export function createCareLog(input) {
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
     type: String(input.type || "").trim(),
     date: String(input.date || new Date().toISOString().slice(0, 10)),
     notes: String(input.notes || "").trim()
@@ -415,7 +420,7 @@ export function normalizeCustomBrandRecords(customBrands, brandList = brands) {
 
 export function normalizeGarmentRecord(garment) {
   return {
-    id: String(garment.id || crypto.randomUUID()),
+    id: String(garment.id || createId()),
     imageUrl: String(garment.imageUrl || garment.image_url || ""),
     brandId: String(garment.brandId || garment.brand_id || ""),
     categoryLevel1: String(garment.categoryLevel1 || garment.category_level_1 || ""),
@@ -432,7 +437,7 @@ export function normalizeGarmentRecord(garment) {
     wearDates: Array.isArray(garment.wearDates) ? garment.wearDates.map(String).filter(Boolean).sort() : [],
     careLogs: Array.isArray(garment.careLogs)
       ? garment.careLogs.map((log) => ({
-          id: String(log.id || crypto.randomUUID()),
+          id: String(log.id || createId()),
           type: String(log.type || ""),
           date: String(log.date || ""),
           notes: String(log.notes || "")
@@ -446,7 +451,7 @@ export function normalizeGarmentRecord(garment) {
 
 export function normalizeOutfitRecord(outfit, index, garments) {
   const normalized = {
-    id: String(outfit.id || crypto.randomUUID()),
+    id: String(outfit.id || createId()),
     name: String(outfit.name || "").trim(),
     occasion: String(outfit.occasion || "").trim(),
     garmentIds: Array.isArray(outfit.garmentIds) ? [...new Set(outfit.garmentIds.map(String))] : [],
@@ -463,7 +468,7 @@ export function normalizeOutfitRecord(outfit, index, garments) {
 
 export function createGarment(input) {
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
     imageUrl: input.imageUrl || "",
     brandId: input.brandId,
     categoryLevel1: input.categoryLevel1,
@@ -500,7 +505,7 @@ export function validateOutfit(input, garments) {
 
 export function createOutfit(input) {
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
     name: String(input.name || "").trim(),
     occasion: String(input.occasion || "").trim(),
     garmentIds: [...new Set(input.garmentIds || [])],

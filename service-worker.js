@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-wardrobe-app-v8";
+const CACHE_NAME = "smart-wardrobe-app-v10";
 const APP_ASSETS = [
   "./",
   "./index.html",

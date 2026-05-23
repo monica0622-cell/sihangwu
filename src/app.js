@@ -10,6 +10,7 @@ import {
 } from "./data.js";
 import {
   addCareLog,
+  createId,
   createBrand,
   createOutfit,
   createGarment,
@@ -142,7 +143,7 @@ function allBrands() {
 function getDeviceId() {
   let id = localStorage.getItem(deviceStorageKey);
   if (!id) {
-    id = crypto.randomUUID();
+    id = createId();
     localStorage.setItem(deviceStorageKey, id);
   }
   return id;
@@ -190,6 +191,29 @@ async function uploadImage(dataUrl) {
   } catch {
     return dataUrl;
   }
+}
+
+function optimizeImageDataUrl(dataUrl, maxSize = 1600, quality = 0.82) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.addEventListener("load", () => {
+      const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
+      const width = Math.max(1, Math.round(image.naturalWidth * scale));
+      const height = Math.max(1, Math.round(image.naturalHeight * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+      if (!context) {
+        resolve(dataUrl);
+        return;
+      }
+      context.drawImage(image, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    });
+    image.addEventListener("error", () => resolve(dataUrl));
+    image.src = dataUrl;
+  });
 }
 
 function authFetchOptions() {
@@ -1782,7 +1806,8 @@ function bindEvents() {
         state.formDraft = pendingDraft;
         state.isUploadingImage = true;
         render();
-        const imageUrl = await uploadImage(reader.result);
+        const imageDataUrl = await optimizeImageDataUrl(reader.result);
+        const imageUrl = await uploadImage(imageDataUrl);
         const activeForm = document.querySelector(".garment-form");
         const draft = activeForm ? readGarmentDraft(activeForm) : state.formDraft || emptyForm();
         draft.imageUrl = imageUrl;
@@ -1837,22 +1862,27 @@ function bindEvents() {
       return;
     }
 
-    if (state.editingId) {
-      state.garments = state.garments.map((garment) =>
-        garment.id === state.editingId
-          ? { ...garment, ...garmentInput, purchasePrice: garmentInput.purchasePrice ? Number(garmentInput.purchasePrice) : null, updatedAt: new Date().toISOString() }
-          : garment
-      );
-    } else {
-      state.garments = [createGarment(garmentInput), ...state.garments];
-    }
+    try {
+      if (state.editingId) {
+        state.garments = state.garments.map((garment) =>
+          garment.id === state.editingId
+            ? { ...garment, ...garmentInput, purchasePrice: garmentInput.purchasePrice ? Number(garmentInput.purchasePrice) : null, updatedAt: new Date().toISOString() }
+            : garment
+        );
+      } else {
+        state.garments = [createGarment(garmentInput), ...state.garments];
+      }
 
-    saveGarments();
-    state.editingId = null;
-    state.formDraft = state.view === "capture" ? emptyForm() : null;
-    state.formError = "";
-    if (state.view !== "capture") state.view = "closet";
-    showToast(state.view === "capture" ? "已确认入库，可以继续拍下一件" : "已保存衣物");
+      saveGarments();
+      state.editingId = null;
+      state.formDraft = state.view === "capture" ? emptyForm() : null;
+      state.formError = "";
+      if (state.view !== "capture") state.view = "closet";
+      showToast(state.view === "capture" ? "已确认入库，可以继续拍下一件" : "已保存衣物");
+    } catch (error) {
+      state.formError = `保存失败：${error.message || "请重新拍一张较小的照片再试"}`;
+      render();
+    }
   });
 
   const outfitForm = document.querySelector(".outfit-form");
